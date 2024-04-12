@@ -10,8 +10,12 @@ const PORT = process.env.PORT || 4000;
 const app = express();
 app.use(express.json()); // This line is important for parsing JSON bodies
 
+app.use("/api/users", middlewares.userExtractor);
+
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
+
+//
 
 app.use(middlewares.unknownEndpoint);
 app.use(middlewares.errorHandler);

@@ -15,4 +15,17 @@ router.delete("/:id", userController.deleteAuser);
 router.put("/:id", userController.updateAuser);
 router.get("/", userController.getAllUsers);
 
+router.put(
+  "/block-user/:id",
+  middlewares.userExtractor,
+  authMiddlewares.isAdmin,
+  userController.blockAuser
+);
+router.put(
+  "/unblock-user/:id",
+  middlewares.userExtractor,
+  authMiddlewares.isAdmin,
+  userController.unBlockAuser
+);
+
 module.exports = router;

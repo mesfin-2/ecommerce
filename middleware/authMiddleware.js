@@ -8,6 +8,7 @@ const userExtractor = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     try {
       const decodedToken = jwt.verify(token, process.env.SECRET);
+      console.log(decodedToken);
       const user = await User.findById(decodedToken.id);
 
       if (!user) {
@@ -27,7 +28,12 @@ const userExtractor = async (req, res, next) => {
 };
 
 const isAdmin = async (req, res, next) => {
-  console.log(req.user);
-  next();
+  const { email } = req.user;
+  const adminUser = await User.findOne({ email });
+  if (adminUser.role !== "admin") {
+    res.status(400).json({ message: "You are not Admin" });
+  } else {
+    next();
+  }
 };
 module.exports = { userExtractor, isAdmin };
