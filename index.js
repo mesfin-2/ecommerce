@@ -4,11 +4,14 @@ const dotenv = require("dotenv").config();
 const userRouter = require("./routes/user-route.js");
 const authRouter = require("./routes/auth-route.js");
 const middlewares = require("./middleware/middleware.js");
+const cookieParser = require("cookie-parser");
+
 dbConnect();
 
 const PORT = process.env.PORT || 4000;
 const app = express();
 app.use(express.json()); // This line is important for parsing JSON bodies
+app.use(cookieParser()); //for refresh Token feature
 
 app.use("/api/users", middlewares.userExtractor);
 
