@@ -6,23 +6,24 @@ const userExtractor = async (req, res, next) => {
 
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.split(" ")[1];
-    {
+    try {
       const decodedToken = jwt.verify(token, process.env.SECRET);
       const user = await User.findById(decodedToken.id);
-      if (!user) {
-        req.user = null; // User not found
-      } else {
-        req.user = user; // Attach user to request
-      }
 
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      } else {
+        req.user = user;
+        next();
+      }
+    } catch (error) {
       console.error("Error verifying token:", error);
-      req.user = null; // Invalid token
+      return res.status(401).json({ error: "Invalid token" });
     }
   } else {
     req.user = null; // No token or invalid format
+    next();
   }
-
-  next();
 };
 
 const isAdmin = async (req, res, next) => {
