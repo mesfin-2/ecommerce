@@ -3,6 +3,7 @@ const dbConnect = require("./config/dbConnect");
 const dotenv = require("dotenv").config();
 const userRouter = require("./routes/user-route.js");
 const authRouter = require("./routes/auth-route.js");
+const productRouter = require("./routes/product-route.js");
 const middlewares = require("./middleware/middleware.js");
 const cookieParser = require("cookie-parser");
 
@@ -17,6 +18,7 @@ app.use("/api/users", middlewares.userExtractor);
 
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/products", productRouter);
 
 //
 
