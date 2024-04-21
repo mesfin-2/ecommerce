@@ -22,13 +22,7 @@ const createProduct = async (req, res) => {
     res.status(201).json({ message: "Product successfully created" });
   };
   
-  const getAllProducts = async (req, res) => {
-    // Make query to filter, sort, paginate
-
-    //FILTERING
-    // extracting the query parameters from req.query into queryObj,
-    const queryObj = { ...req.query };
-    console.log(queryObj );
+ 
     /**
      * 1. Filtering
      *  This req.query typically contains all the query parameters sent
@@ -41,37 +35,89 @@ const createProduct = async (req, res) => {
      * criteria are passed to
      *  the database query, which improves the reliability and security of your API.
      * 2. Sorting
+     * We split the sort query parameter into an array of sorting fields.
+        We iterate over each sorting field and check if it starts with a hyphen (-).
+        you can on/off the hyphen (-) and see how it works http://localhost:4000/api/products?sort=-category,brand .
+        If it does, it indicates descending order; otherwise, it's ascending.
+        We extract the field name and sorting order accordingly and use them to
+        compare the products.
+        If no sorting parameter is provided, we default to sorting by createdAt
+        in descending order.
+
      * 3. Field limiting
+      * We check if the fields query parameter is present in the request.
+          If it is, we split the fields into an array of field names.
+          We join the array of field names into a string separated by spaces.
+          We use the select method to include or exclude fields from the query result.
+          If no fields parameter is provided, we exclude the __v field from the result.
+         * to check how it works try this http://localhost:4000/api/products?fields=title,price,brand
+          *the opposite of select try this http://localhost:4000/api/products?fields=-title,-price,-brand
      * 4. Pagination
+     * We extract the page and limit query parameters from the request.
+     * We set the default values for page and limit to 1 and 10, respectively.
+     * We calculate the number of products to skip based on the page and limit values.
+     * We use the skip and limit methods to paginate the products.
+     * We count the total number of products in the database.
+     * If the skip value is greater than the total number of products,
+     * we throw an error indicating that the page does not exist.
+     * We return the paginated products as the response.
+     * to check how it works try this http://localhost:4000/api/products?page=2&limit=2
      * 
      * 
      */
-    // Filtering
-  
-    const excludeFields = ['page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach(el => delete queryObj[el]);
-  //converting queryObj to a string (queryStr) and replacing certain substrings in it
-  // with their corresponding MongoDB operators (e.g., gte, gt, lte, lt). 
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-    // convert queryStr back to an object with the correct MongoDB query syntax.
-    let products = await Product.find(JSON.parse(queryStr));
+        const getAllProducts = async (req, res) => {
+           
+            // Make query to filter, sort,limit, paginate
+        
+            // Filtering
+            const filterQuery = { ...req.query };
+            const excludeFields = ['page', 'sort', 'limit', 'fields'];
+            excludeFields.forEach(el => delete filterQuery[el]);
+        
+            let filterStr = JSON.stringify(filterQuery);
+            filterStr = filterStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+            //productQuery is not an array of product Document, Its a  Mongoose query object, 
+            //that is why we can chain other methods like sort, select, etc. to it
+            let productQuery = Product.find(JSON.parse(filterStr));//Mongoose query object for products
+        
+            // Sorting
+            if (req.query.sort) {
+              const sortBy = req.query.sort.split(",");
+              productQuery = productQuery.sort(sortBy.join(" "));
+            } else {
+              productQuery = productQuery.sort("-createdAt");
+            }
+        
+            // Field limiting
+            if (req.query.fields) {
+              const fields = req.query.fields.split(",").join(" ");
+              productQuery = productQuery.select(fields);
+            } else {
+              //if fields are not provided, exclude __v field
+              productQuery = productQuery.select("-__v");
+            }
 
-    // SORTING
+            //Pagination
+            const page = parseInt(req.query.page, 10) || 1;
+            const limit = parseInt(req.query.limit, 10) || 10;
+            const skip = (page - 1) * limit;
+            const query = productQuery.skip(skip).limit(limit);
 
-    // if (req.query.sort) {
-
-    //   const sortBy = req.query.sort.split(",").join(" ");
-      
-    //   products = products.sort(sortBy); // Fix: Replace 'query.sort(sortBy)' with 'products.sort(sortBy)'
-    // } else {
-    //   products = products.sort("-createdAt"); // Fix: Replace 'query.sort("-createdAt")' with 'products.sort("-createdAt")'
-    // }
-
-
-    
-    return res.status(200).json(products);
-  };
+            if(req.query.page){
+                const numProducts = await Product.countDocuments();
+                if(skip >= numProducts){
+                    throw new Error('This page does not exist');
+                } 
+            }
+            //console.log(page, limit, skip);
+        
+            // Execute the query
+            const products = await productQuery.exec();
+        
+            return res.status(200).json(products);
+           
+        };
+        
   
   const getAproduct = async (req, res) => {
     const { id } = req.params;
