@@ -110,7 +110,7 @@ const forgotPasswordToken= async(req,res)=>{
   await user.save();
   //update the user with the reset token  
   const resetUrl = `Hi, Please follow this link to reset your password. This link is valid only for  10 minutes from now. 
-  <a href='http://localhost:4000/api/reset/${token}'>Click here</a> `;
+  <a href='http://localhost:4000/api/auth/reset-password/${token}'>Click here</a> `;
   //send email
   const data = {
     to: user.email,
