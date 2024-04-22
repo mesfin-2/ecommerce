@@ -6,11 +6,13 @@ const authRouter = require("./routes/auth-route.js");
 const productRouter = require("./routes/product-route.js");
 const middlewares = require("./middleware/middleware.js");
 const cookieParser = require("cookie-parser");
+const morgan = require("morgan");
 
 dbConnect();
 
 const PORT = process.env.PORT || 4000;
 const app = express();
+app.use(morgan("dev"));
 app.use(express.json()); // This line is important for parsing JSON bodies
 app.use(cookieParser()); //for refresh Token feature
 

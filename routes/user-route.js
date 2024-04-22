@@ -16,6 +16,12 @@ router.put("/:id", userController.updateAuser);
 router.get("/", userController.getAllUsers);
 
 router.put(
+  "/update-password",
+  middlewares.userExtractor,
+  userController.updatePassword
+);
+
+router.put(
   "/block-user/:id",
   middlewares.userExtractor,
   authMiddlewares.isAdmin,

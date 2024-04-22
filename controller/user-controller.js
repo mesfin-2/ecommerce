@@ -61,6 +61,21 @@ const updateAuser = async (req, res) => {
     res.status(400).json({ message: "user is not found" });
   }
 };
+const updatePassword = async (req, res) => {
+  const { _id } = req.user;
+  validateMongoDbId(_id);
+  const { password } = req.body;
+  const user = await User.findById(_id);
+   
+   if (password) {
+    user.password = password;
+        
+   const updatePassword = await user.save();
+    return res.status(200).json(updatePassword);
+  } else {
+    res.status(400).json(user);
+  }
+};
 const blockAuser = async (req, res) => {
   const { id } = req.params;
   validateMongoDbId(id);
@@ -88,6 +103,8 @@ const unBlockAuser = async (req, res) => {
   return res.status(200).json({ message: "user unblocked" });
 };
 
+
+
 module.exports = {
   createUser,
   getAllUsers,
@@ -96,4 +113,6 @@ module.exports = {
   updateAuser,
   blockAuser,
   unBlockAuser,
+  updatePassword
+  
 };

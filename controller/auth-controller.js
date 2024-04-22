@@ -1,8 +1,11 @@
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const mongoose = require("mongoose");
 const User = require("../model/user-model.js");
 const jwt = require("jsonwebtoken");
 const generateRefreshToken = require("../config/refreshToken.js");
+const validateMongoDbId = require("../utils/validateMongodbid.js");
+const sendEmail = require("./email-controller.js");
 
 const login = async (req, res) => {
   try {
@@ -96,4 +99,46 @@ const logout = async (req, res) => {
   return res.sendStatus(204);
 };
 
-module.exports = { login, handleRefreshToken, logout };
+
+const forgotPasswordToken= async(req,res)=>{
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    res.status(400).json({ message: "No user found" });
+  }
+  const token = await user.createPasswordResetToken();//from model
+  await user.save();
+  //update the user with the reset token  
+  const resetUrl = `Hi, Please follow this link to reset your password. This link is valid only for  10 minutes from now. 
+  <a href='http://localhost:4000/api/reset/${token}'>Click here</a> `;
+  //send email
+  const data = {
+    to: user.email,
+    subject: "Forgot Password",
+    text: `Hey User`,
+    htm: resetUrl,
+  };
+  //sendEmail(data);
+  sendEmail.sendEmail(data);
+  res.status(200).json(token);
+}
+
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+  if (!user) {
+    res.status(400).json({ message: "Invalid token" });
+  }
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+  res.status(200).json(user);
+};
+
+module.exports = { login, handleRefreshToken, logout,forgotPasswordToken,resetPassword };
