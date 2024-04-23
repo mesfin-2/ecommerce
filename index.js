@@ -5,6 +5,7 @@ const userRouter = require("./routes/user-route.js");
 const authRouter = require("./routes/auth-route.js");
 const blogRouter = require("./routes/blog-route.js");
 const productRouter = require("./routes/product-route.js");
+const productcategoryRouter = require("./routes/product-category-route.js");
 const middlewares = require("./middleware/middleware.js");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
@@ -25,6 +26,8 @@ app.use("/api/products", productRouter);
 
 
 app.use("/api/blogs", blogRouter);
+
+app.use("/api/category", productcategoryRouter);
 
 app.use(middlewares.unknownEndpoint);
 app.use(middlewares.errorHandler);
