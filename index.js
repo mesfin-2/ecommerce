@@ -6,7 +6,12 @@ const authRouter = require("./routes/auth-route.js");
 const blogRouter = require("./routes/blog-route.js");
 const productRouter = require("./routes/product-route.js");
 const productcategoryRouter = require("./routes/product-category-route.js");
+const blogcategoryRouter = require("./routes/blog-category-route.js");
+const brandRouter = require("./routes/brand-route.js");
+const couponRouter = require("./routes/coupon-route.js");
+const uploadRouter = require("./routes/upload-route.js");
 const middlewares = require("./middleware/middleware.js");
+const authMiddleware = require("./middleware/authMiddleware");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
@@ -18,7 +23,7 @@ app.use(morgan("dev"));
 app.use(express.json()); // This line is important for parsing JSON bodies
 app.use(cookieParser()); //for refresh Token feature
 
-app.use("/api/users", middlewares.userExtractor);
+app.use("/api/users", authMiddleware.userExtractor);
 
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
@@ -27,10 +32,19 @@ app.use("/api/products", productRouter);
 
 app.use("/api/blogs", blogRouter);
 
-app.use("/api/category", productcategoryRouter);
+app.use("/api/product-category", productcategoryRouter);
+app.use("/api/blog-category", blogcategoryRouter);
 
-app.use(middlewares.unknownEndpoint);
+app.use("/api/brand", brandRouter);
+app.use("/api/coupon", couponRouter);
+
+app.use("/api/upload", uploadRouter);
+
+
+
+
 app.use(middlewares.errorHandler);
+app.use(middlewares.unknownEndpoint);
 
 app.listen(PORT, () => {
   console.log("Server is running at port " + PORT);

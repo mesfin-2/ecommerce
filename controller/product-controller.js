@@ -2,7 +2,9 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const slugify = require("slugify");
 const Product = require("../model/productModel");
+const User = require("../model/user-model");
 const { query } = require("express");
+const  cloudinaryUploadImage  = require("../utils/cloudinary");
 
 
 const createProduct = async (req, res) => {
@@ -157,6 +159,91 @@ const createProduct = async (req, res) => {
       res.status(400).json({ message: "product is not found" });
     }
   };
-   
 
-module.exports={createProduct,getAllProducts,getAproduct,deleteProduct,updateProduct}
+  const addProductToWishList = async (req, res) => {
+    const { _id } = req.user;
+    const { prodId } = req.body;//product id
+
+    const user = await User.findById(_id);//user that is logged in
+    console.log("whish",user.wishlist);
+    const alreadyAddedUser = user.wishlist.find((id) => id.toString() === prodId);//we have wishlist a
+    if(alreadyAddedUser){
+      let user = await User.findByIdAndUpdate(
+        _id,
+         {
+           $pull: { wishlist: prodId } },
+            { new: true }
+          
+          );//remove from wishlist
+          res.json(user)
+      //return res.status(400).json({ message: "Product already added to wishlist" });
+
+    }else {
+      let user = await User.findByIdAndUpdate(
+        _id,
+         {
+           $push: { wishlist: prodId }//add to wishlist
+           },
+            { new: true }
+          
+          );//add to wishlist
+          res.json(user)
+    }
+
+  }
+  //callulate the total rating
+  const rating = async (req, res) => {
+    const { _id } = req.user;
+    const { star,comment,prodId } = req.body;//product id
+    const user = await User.findById(_id);//user that is logged in
+    const product = await Product.findById(prodId);
+
+    let alreadyRated = product.ratings.find((userId) => userId.postedby.toString() === _id.toString());
+
+    if(alreadyRated){
+     const updateRating = await Product.updateOne(
+      {
+        ratings: { $elemMatch: alreadyRated },
+      },
+      {
+        $set: { "ratings.$.star": star,  "ratings.$.comment": comment},
+      },
+      { new: true }
+    
+    );
+    res.json(updateRating);
+     
+    }else{
+       
+    const newRating = await Product.findByIdAndUpdate(
+      prodId,
+      {
+      $push: { ratings: {
+      star: star,
+      comment: comment,
+      postedby: _id
+      }
+    },
+
+    },{new:true});
+    res.json(newRating);
+    
+    const totalRating = await Product.findById(prodId);
+    let total =  totalRating.ratings.reduce((acc, item) => acc + item.star, 0);
+    let totalrating = Math.round( total / totalRating.ratings.length);
+    console.log(totalrating);
+    const updateTotalRating = await Product.findByIdAndUpdate(
+      prodId,
+      {
+        $set: { totalrating: totalrating },
+      },
+      { new: true }
+    );
+    res.json(updateTotalRating);
+    
+    
+    }
+  };
+
+ 
+module.exports={createProduct,getAllProducts,getAproduct,deleteProduct,updateProduct,addProductToWishList,rating};

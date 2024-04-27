@@ -51,6 +51,57 @@ const login = async (req, res) => {
   }
 };
 
+//handle admin login
+const adminLogin = async (req, res) => {
+
+  try {
+    const { email, password } = req.body;
+    //console.log(email, password);
+    //Check if user already exists
+    const existingAdmin = await User.findOne({ email });
+    const currentPassword = await existingAdmin.isPasswordMatched(password); //method come from model password check
+
+    if(existingAdmin.role !== "admin"){res.status(400).json({message:"You are not authorized to login as admin"})}
+
+    if (existingAdmin && currentPassword) {
+      const token = jwt.sign({ id: existingAdmin._id }, process.env.SECRET, {
+        expiresIn: "1d",
+      });
+      const refreshToken = await generateRefreshToken(existingAdmin._id);
+
+      const updateuser = await User.findByIdAndUpdate(
+        existingAdmin.id,
+        {
+          refreshToken,
+        },
+        { new: true }
+      );
+      //set token in cookies, so that we can fetch it later for refresh token
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        maxAge: 72 * 60 * 60 * 1000,
+      });
+      console.log(existingAdmin);
+      //password check is handled in user model
+      return res.status(200).json({
+        _id: existingAdmin._id,
+        firstname: existingAdmin.firstname,
+        lastname: existingAdmin.lastname,
+        email: existingAdmin.email,
+        mobile: existingAdmin.mobile,
+        token,
+      });
+    } else {
+      res.status(400).json({ message: "Invalid Credentials" });
+    }
+  } catch (error) {
+    console.error("Error creating user:", error);
+  }
+}
+
+
+
+
 //Handle refresh token
 const handleRefreshToken = async (req, res) => {
   const cookies = req.cookies;
@@ -141,4 +192,4 @@ const resetPassword = async (req, res) => {
   res.status(200).json(user);
 };
 
-module.exports = { login, handleRefreshToken, logout,forgotPasswordToken,resetPassword };
+module.exports = { login, handleRefreshToken, logout,forgotPasswordToken,resetPassword ,adminLogin };

@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const blogRouter = require('../controller/blog-controller');
-const middlewares = require('../middleware/middleware');
-const authMiddlewares = require('../middleware/authMiddleware');
+const uploadImages = require('../middleware/uploadImages');
+ const authMiddlewares = require('../middleware/authMiddleware');
 
-router.post('/',  middlewares.userExtractor,
+router.post('/',  authMiddlewares.userExtractor,
 authMiddlewares.isAdmin, blogRouter.createBlog);
-router.put('/like' ,middlewares.userExtractor, blogRouter.likeBlog);
-router.put('/dislike',middlewares.userExtractor, blogRouter.dislikeBlog);
+router.put('/like' ,authMiddlewares.userExtractor, blogRouter.likeBlog);
+router.put('/dislike',authMiddlewares.userExtractor, blogRouter.dislikeBlog);
 
-router.put('/:id',  middlewares.userExtractor,
-authMiddlewares.isAdmin, blogRouter.updateBlog);
+router.put('/:id',  authMiddlewares.userExtractor,authMiddlewares.isAdmin, blogRouter.updateBlog);
+//router.put('/upload-images/:id',  middlewares.userExtractor,authMiddlewares.isAdmin, blogRouter.updateBlog);
 
-router.get('/:id',  middlewares.userExtractor, blogRouter.getBlog);
-router.get('/',  middlewares.userExtractor, blogRouter.getAllBlogs);
-router.delete('/:id',  middlewares.userExtractor,authMiddlewares.isAdmin, blogRouter.deleteBlog);
+router.get('/:id',  authMiddlewares.userExtractor, blogRouter.getBlog);
+router.get('/',  authMiddlewares.userExtractor, blogRouter.getAllBlogs);
+router.delete('/:id',  authMiddlewares.userExtractor,authMiddlewares.isAdmin, blogRouter.deleteBlog);
 
 
 
