@@ -5,6 +5,7 @@ const {
   cloudinaryDeleteImg,
 } = require("../utils/cloudinary");
 
+
 const uploadImages = async (req, res) => {
   try {
     const uploader = (path) => cloudinaryUploadImg(path, "images");
@@ -22,7 +23,7 @@ const uploadImages = async (req, res) => {
     });
     res.json(images);
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 const deleteImages = async (req, res) => {
@@ -31,7 +32,7 @@ const deleteImages = async (req, res) => {
     const deleted = cloudinaryDeleteImg(id, "images");
     res.json({ message: "Deleted" });
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 

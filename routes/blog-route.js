@@ -10,7 +10,7 @@ router.put('/like' ,authMiddlewares.userExtractor, blogRouter.likeBlog);
 router.put('/dislike',authMiddlewares.userExtractor, blogRouter.dislikeBlog);
 
 router.put('/:id',  authMiddlewares.userExtractor,authMiddlewares.isAdmin, blogRouter.updateBlog);
-//router.put('/upload-images/:id',  middlewares.userExtractor,authMiddlewares.isAdmin, blogRouter.updateBlog);
+router.put('/upload-images/:id',  authMiddlewares.userExtractor,authMiddlewares.isAdmin, uploadImages.uploadPhoto.array('images', 10), uploadImages.blogImgResize, blogRouter.uploadImages);
 
 router.get('/:id',  authMiddlewares.userExtractor, blogRouter.getBlog);
 router.get('/',  authMiddlewares.userExtractor, blogRouter.getAllBlogs);

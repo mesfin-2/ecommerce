@@ -219,7 +219,7 @@ const deleteBlog = async (req, res) => {
       );
       res.json(findBlog);
     } catch (error) {
-      throw new Error(error);
+      res.status(500).json({ message: "Something went wrong" });
     }
   };
 module.exports = { createBlog,updateBlog,getBlog,getAllBlogs,deleteBlog,likeBlog,dislikeBlog,uploadImages };
